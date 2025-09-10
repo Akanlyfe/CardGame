@@ -14,8 +14,6 @@ function love.load()
 
   GameState.request("menu")
 
-  Constants.screen.compute()
-
   SaveSystem.load()
 end
 
@@ -40,7 +38,14 @@ end
 
 function love.draw()
   if (currentGameState ~= "") then
+    love.graphics.push()
+
+    love.graphics.translate(Constants.screen.offset.x, Constants.screen.offset.y)
+    love.graphics.scale(Constants.scale, Constants.scale)
+
     modules[currentGameState].draw()
+
+    love.graphics.pop()
   end
 end
 
