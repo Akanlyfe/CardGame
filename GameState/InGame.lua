@@ -19,18 +19,29 @@ end
 
 function class.draw()
   love.graphics.setBackgroundColor(0, .5, 0, 1)
-  
+
   -- DECK
-  local deckPile = love.graphics.newImage("Assets/Sprites/Cards/cardBack_red3.png")
-  love.graphics.draw(deckPile, 10, 10)
+  if (Deck.count() > 0) then
+    local deckPile = love.graphics.newImage("Assets/Sprites/Cards/cardBack_red3.png")
+    love.graphics.draw(deckPile, 10, 10)
+  end
 end
 
 function class.keypressed(_key)
   if (_key == 'tab') then
     GameState.request("gameOver")
-  elseif (_key == 'a') then
-    local card = Deck.draw()
-    print(card)
+  end
+end
+
+function class.mousepressed(_x, _y, _button)
+  if (Deck.count() > 0) then
+    if (_button == 1) then
+      if (_x >= 10 and _y >= 10
+        and _x <= 100 and _y <= 100) then
+        local card = Deck.drawCard()
+        print(card)
+      end
+    end
   end
 end
 

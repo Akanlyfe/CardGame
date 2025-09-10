@@ -13,6 +13,10 @@ function class.init()
   }
 end
 
+function class.count()
+  return #deck.cards
+end
+
 function class.shuffle()
   math.randomseed(os.time())
 
@@ -25,7 +29,7 @@ function class.shuffle()
   end
 end
 
-function class.draw()
+function class.drawCard()
   if (#deck.cards > 0) then
     local card = deck.cards[1]
 
