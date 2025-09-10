@@ -1,12 +1,19 @@
+local Constants = require("Util/Constants")
+local Collision = require("Util/Collision")
+
 local GameState = require("GameState/GameState")
 local Deck = require("Cards/Deck")
+local Card = require("Cards/Card")
 
 local class = {}
 local inGame = {}
 
 function class.load()
   Deck.init()
-  Deck.shuffle()
+  --TODO Deck.shuffle()
+
+  inGame.deckPile = Card.create("Back_red3", 10, 10)
+  inGame.drawnCards = {}
 end
 
 function class.unload()
@@ -22,8 +29,14 @@ function class.draw()
 
   -- DECK
   if (Deck.count() > 0) then
-    local deckPile = love.graphics.newImage("Assets/Sprites/Cards/cardBack_red3.png")
-    love.graphics.draw(deckPile, 10, 10)
+    love.graphics.draw(inGame.deckPile.sprite, 10, 10)
+  end
+
+  -- DRAWN CARD
+  if (#inGame.drawnCards > 0) then
+    for i, card in ipairs(inGame.drawnCards) do
+      love.graphics.draw(card.sprite, card.x, card.y)
+    end
   end
 end
 
@@ -34,12 +47,23 @@ function class.keypressed(_key)
 end
 
 function class.mousepressed(_x, _y, _button)
-  if (Deck.count() > 0) then
-    if (_button == 1) then
-      if (_x >= 10 and _y >= 10
-        and _x <= 100 and _y <= 100) then
-        local card = Deck.drawCard()
-        print(card)
+  local mousePosition = {
+    x = _x,
+    y = _y
+  }
+
+  if (_button == 1) then
+    if (Collision.isPointRectangleColliding(mousePosition, inGame.deckPile)) then
+      if (Deck.count() > 0) then
+        local cardName = Deck.drawCard()
+        local card = Card.create(cardName, 160 + (60 * Constants.scale) * #inGame.drawnCards, 10)
+
+        table.insert(inGame.drawnCards, card)
+      else
+        Deck.init()
+        Deck.shuffle()
+
+        inGame.drawnCards = {}
       end
     end
   end

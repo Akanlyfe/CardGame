@@ -3,13 +3,10 @@ local deck = {}
 
 function class.init()
   deck.cards = {
-    "cardSpadesA", "cardSpades2", "cardSpades3", "cardSpades4", "cardSpades5", "cardSpades6", "cardSpades7", "cardSpades8", "cardSpades9", "cardSpades10", "cardSpadesJ", "cardSpadesQ", "cardSpadesK",
-
-    "cardHeartsA", "cardHearts2", "cardHearts3", "cardHearts4", "cardHearts5", "cardHearts6", "cardHearts7", "cardHearts8", "cardHearts9", "cardHearts10", "cardHeartsJ", "cardHeartsQ", "cardHeartsK",
-
-    "cardClubsA", "cardClubs2", "cardClubs3", "cardClubs4", "cardClubs5", "cardClubs6", "cardClubs7", "cardClubs8", "cardClubs9", "cardClubs10", "cardClubsJ", "cardClubsQ", "cardClubsK",
-
-    "cardDiamondsA", "cardDiamonds2", "cardDiamonds3", "cardDiamonds4", "cardDiamonds5", "cardDiamonds6", "cardDiamonds7", "cardDiamonds8", "cardDiamonds9", "cardDiamonds10", "cardDiamondsJ", "cardDiamondsQ", "cardDiamondsK"
+    "SpadesA", "Spades2", "Spades3", "Spades4", "Spades5", "Spades6", "Spades7", "Spades8", "Spades9", "Spades10", "SpadesJ", "SpadesQ", "SpadesK",
+    "HeartsA", "Hearts2", "Hearts3", "Hearts4", "Hearts5", "Hearts6", "Hearts7", "Hearts8", "Hearts9", "Hearts10", "HeartsJ", "HeartsQ", "HeartsK",
+    "ClubsA", "Clubs2", "Clubs3", "Clubs4", "Clubs5", "Clubs6", "Clubs7", "Clubs8", "Clubs9", "Clubs10", "ClubsJ", "ClubsQ", "ClubsK",
+    "DiamondsA", "Diamonds2", "Diamonds3", "Diamonds4", "Diamonds5", "Diamonds6", "Diamonds7", "Diamonds8", "Diamonds9", "Diamonds10", "DiamondsJ", "DiamondsQ", "DiamondsK"
   }
 end
 
@@ -37,7 +34,7 @@ function class.drawCard()
 
     return card
   end
-  
+
   return "empty"
 end
 
