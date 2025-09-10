@@ -56,7 +56,11 @@ function class.mousepressed(_x, _y, _button)
     if (Collision.isPointRectangleColliding(mousePosition, inGame.deckPile)) then
       if (Deck.count() > 0) then
         local cardName = Deck.drawCard()
-        local card = Card.create(cardName, 160 + (60 * Constants.scale) * #inGame.drawnCards, 10)
+        local x = inGame.deckPile.x + inGame.deckPile.width
+        local y = inGame.deckPile.y
+        local spacing = inGame.deckPile.width / 4.5 * #inGame.drawnCards
+
+        local card = Card.create(cardName, x + spacing, y)
 
         table.insert(inGame.drawnCards, card)
       else

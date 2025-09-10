@@ -8,8 +8,8 @@ function class.create(_cardName, _x, _y)
     sprite = love.graphics.newImage("Assets/Sprites/Cards/card" .. _cardName .. ".png"),
     x = _x,
     y = _y,
-    width = 150 * Constants.scale,
-    height = 200 * Constants.scale
+    width = 150,
+    height = 200
   }
   
   function card:setPosition(_newX, _newY)
