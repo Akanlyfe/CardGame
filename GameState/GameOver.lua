@@ -19,10 +19,8 @@ function class.draw()
 end
 
 function class.keypressed(_key)
-  if (_key == 'escape') then
+  if (_key == 'tab') then
     GameState.request("menu")
-  elseif (_key == 'tab') then
-    GameState.request("inGame")
   end
 end
 

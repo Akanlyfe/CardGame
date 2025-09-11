@@ -9,7 +9,7 @@ function love.load()
   love.graphics.setDefaultFilter('nearest', 'nearest', 0)
 
   modules.menu = require("GameState/Menu")
-  modules.inGame = require("GameState/InGame")
+  modules.solitaire = require("GameState/Solitaire")
   modules.gameOver = require("GameState/GameOver")
 
   GameState.request("menu")
@@ -23,6 +23,11 @@ function love.update(_dt)
   if (requestedGameState ~= "") then
     if (currentGameState ~= "") then
       modules[currentGameState].unload()
+    end
+
+    if (not modules[requestedGameState]) then
+      print("[ERROR] requestedGameState does not exist (" .. requestedGameState .. ").")
+      GameState.request("menu")
     end
 
     GameState.acceptRequested()
