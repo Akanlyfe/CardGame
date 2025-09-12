@@ -22,6 +22,11 @@ function class.unload()
 end
 
 function class.update(_dt)
+  if (#inGame.drawnCards > 0) then
+    for _, card in ipairs(inGame.drawnCards) do
+      card:update(_dt)
+    end
+  end
 end
 
 function class.draw()
@@ -34,6 +39,15 @@ function class.draw()
 
   -- DRAWN CARDS
   if (#inGame.drawnCards > 0) then
+    table.sort(inGame.drawnCards,
+      function(a, b)
+        if (a.y == b.y) then
+          return a.x < b.x
+        end
+        return a.y < b.y
+      end
+    )
+
     for _, card in ipairs(inGame.drawnCards) do
       love.graphics.draw(card.sprite, card.x, card.y)
     end
@@ -53,17 +67,6 @@ function class.mousepressed(_x, _y, _button)
   }
 
   if (_button == 1) then
-    print("")
-    print(mousePosition.x, mousePosition.y)
-    print("deckPile: ", inGame.deckPile:getBoundingBox().x, inGame.deckPile:getBoundingBox().y,
-      inGame.deckPile:getBoundingBox().x + inGame.deckPile:getBoundingBox().width,
-      inGame.deckPile:getBoundingBox().y + inGame.deckPile:getBoundingBox().height)
-
-    if (#inGame.drawnCards > 0) then
-      local cardBB = inGame.drawnCards[1]:getBoundingBox()
-      print("card1: ", cardBB.x, cardBB.y, cardBB.x + cardBB.width, cardBB.y + cardBB.height)
-    end
-
     if (Collision.isPointRectangleColliding(mousePosition, inGame.deckPile:getBoundingBox())) then
       if (Deck.count() > 0) then
         local cardName = Deck.drawCard()
@@ -83,9 +86,11 @@ function class.mousepressed(_x, _y, _button)
     end
   elseif (_button == 2) then
     if (#inGame.drawnCards > 0) then
-      for _, card in ipairs(inGame.drawnCards) do
+      for i = #inGame.drawnCards, 1, -1 do
+        local card = inGame.drawnCards[i]
         if (Collision.isPointRectangleColliding(mousePosition, card:getBoundingBox())) then
           card:setPosition(love.math.random(Constants.screen.width), love.math.random(Constants.screen.height))
+          break
         end
       end
     end
