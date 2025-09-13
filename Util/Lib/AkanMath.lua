@@ -16,4 +16,12 @@ function class.normalize(_vector)
   return normalizedVector
 end
 
+function class.clamp(_min, _max, _value)
+  return math.max(_min, math.min(_max, _value))
+end
+
+function class.lerp(_min, _max, _time)
+  return _min + (_max - _min) * _time
+end
+
 return class

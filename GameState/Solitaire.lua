@@ -12,7 +12,7 @@ function class.load()
   Deck.init()
   --TODO Deck.shuffle()
 
-  inGame.deckPile = Card.create("Back_red3", 10, 10)
+  inGame.deckPile = Card.create(Deck.getBack(), Deck.getBack(), 10, 10)
   inGame.drawnCards = {}
 end
 
@@ -49,7 +49,7 @@ function class.draw()
     )
 
     for _, card in ipairs(inGame.drawnCards) do
-      love.graphics.draw(card.sprite, card.x, card.y)
+      card:draw()
     end
   end
 end
@@ -74,8 +74,7 @@ function class.mousepressed(_x, _y, _button)
         local y = inGame.deckPile.y
         local spacing = inGame.deckPile.width / 4.5 * #inGame.drawnCards
 
-        local card = Card.create(cardName, x + spacing, y)
-
+        local card = Card.create(Deck.getBack(), cardName, x + spacing, y)
         table.insert(inGame.drawnCards, card)
       else
         Deck.init()
@@ -84,12 +83,22 @@ function class.mousepressed(_x, _y, _button)
         inGame.drawnCards = {}
       end
     end
+
+    if (#inGame.drawnCards > 0) then
+      for i = #inGame.drawnCards, 1, -1 do
+        local card = inGame.drawnCards[i]
+        if (Collision.isPointRectangleColliding(mousePosition, card:getBoundingBox())) then
+          card:moveTo(love.math.random(Constants.screen.width), love.math.random(Constants.screen.height))
+          break
+        end
+      end
+    end
   elseif (_button == 2) then
     if (#inGame.drawnCards > 0) then
       for i = #inGame.drawnCards, 1, -1 do
         local card = inGame.drawnCards[i]
         if (Collision.isPointRectangleColliding(mousePosition, card:getBoundingBox())) then
-          card:setPosition(love.math.random(Constants.screen.width), love.math.random(Constants.screen.height))
+          card:flip()
           break
         end
       end
