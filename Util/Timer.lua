@@ -13,15 +13,15 @@ function class.create(_duration, _callback)
   }
 
   function timer:getTime()
-    return timer.time
+    return self.time
   end
 
   function timer:getDuration()
-    return timer.duration
+    return self.duration
   end
 
   function timer:getHalfDuration()
-    return timer.duration / 2
+    return self.duration / 2
   end
 
   function timer:play()

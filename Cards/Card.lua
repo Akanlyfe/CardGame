@@ -99,19 +99,22 @@ function class.create(_cardBack, _cardName, _x, _y)
     end
 
     if (self.isFlipping) then
+      local t = self.timer:getTime() / self.timer:getDuration()
+      local easedT = AkanEase.easeInOutCubic(t)
+      
       if (self.flipState == 0) then
-        self.scaleX = AkanMath.lerp(1, 0, self.timer:getTime() / self.timer:getDuration())
+        self.scaleX = AkanMath.lerp(1, 0, easedT)
       else
-        self.scaleX = AkanMath.lerp(0, 1, self.timer:getTime() / self.timer:getDuration())
+        self.scaleX = AkanMath.lerp(0, 1, easedT)
       end
     end
   end
 
   function card:draw()
     if (self.isUncovered) then
-      love.graphics.draw(card.sprite, card.x + card:getBoundingBox().width / 2, card.y, 0, card.scaleX, 1, card:getBoundingBox().width / 2)
+      love.graphics.draw(card.sprite, card.x + card.width / 2, card.y, 0, card.scaleX, 1, card.width / 2)
     else
-      love.graphics.draw(card.spriteBack, card.x + card:getBoundingBox().width / 2, card.y, 0, card.scaleX, 1, card:getBoundingBox().width / 2)
+      love.graphics.draw(card.spriteBack, card.x + card.width / 2, card.y, 0, card.scaleX, 1, card.width / 2)
     end
   end
 
