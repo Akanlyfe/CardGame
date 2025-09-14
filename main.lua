@@ -2,6 +2,7 @@ local GameState = require("GameState/GameState")
 local SaveSystem = require("Util/SaveSystem")
 local Constants = require("Util/Constants")
 local Timer = require("Util/Timer")
+local DrawAPI = require("Util/DrawAPI")
 
 local modules = {}
 local currentGameState = ""
@@ -40,7 +41,7 @@ function love.update(_dt)
   if (currentGameState ~= "") then
     modules[currentGameState].update(_dt)
   end
-  
+
   Timer.update(_dt)
 end
 
@@ -52,6 +53,7 @@ function love.draw()
     love.graphics.scale(Constants.scale, Constants.scale)
 
     modules[currentGameState].draw()
+    DrawAPI.drawObjects()
 
     love.graphics.pop()
   end

@@ -117,6 +117,10 @@ function class.newTopToDownPlayable(_sprite, _frames, _framerate, _x, _y, _width
     return self.playing
   end
 
+  function newAnimation:setCurrentFrame(_currentFrame)
+    self.currentFrame = math.min(_currentFrame, _frames)
+  end
+
   return newAnimation
 end
 

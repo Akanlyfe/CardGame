@@ -24,4 +24,16 @@ function class.lerp(_min, _max, _time)
   return _min + (_max - _min) * _time
 end
 
+function class.prioritySorting(_a, _b)
+  if (_a.priority == _b.priority) then
+    if (_a.y == _b.y) then
+      return _a.x < _b.x
+    else
+      return _a.y < _b.y
+    end
+  else
+    return _a.priority < _b.priority
+  end
+end
+
 return class

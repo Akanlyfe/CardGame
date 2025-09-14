@@ -5,6 +5,8 @@ local GameState = require("GameState/GameState")
 local Deck = require("Cards/Deck")
 local Card = require("Cards/Card")
 
+local AkanMath = require("Util/Lib/AkanMath")
+
 local class = {}
 local inGame = {}
 
@@ -23,6 +25,7 @@ end
 
 function class.update(_dt)
   if (#inGame.drawnCards > 0) then
+    table.sort(inGame.drawnCards, AkanMath.prioritySorting)
     for _, card in ipairs(inGame.drawnCards) do
       card:update(_dt)
     end
@@ -39,15 +42,6 @@ function class.draw()
 
   -- DRAWN CARDS
   if (#inGame.drawnCards > 0) then
-    table.sort(inGame.drawnCards,
-      function(a, b)
-        if (a.y == b.y) then
-          return a.x < b.x
-        end
-        return a.y < b.y
-      end
-    )
-
     for _, card in ipairs(inGame.drawnCards) do
       card:draw()
     end

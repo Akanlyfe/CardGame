@@ -1,5 +1,7 @@
 local Constants = require("Util/Constants")
 local Timer = require("Util/Timer")
+local DrawAPI = require("Util/DrawAPI")
+
 local AkanMath = require("Util/Lib/AkanMath")
 local AkanEase = require("Util/Lib/AkanEase")
 
@@ -33,7 +35,7 @@ function class.create(_cardBack, _cardName, _x, _y)
   card.width = card.sprite:getWidth()
   card.height = card.sprite:getHeight()
 
-  card.timer = Timer.create(0.25,
+  card.timer = Timer.create("card" .. _cardName .. "Flip", 0.25, false,
     function()
       card.timer:pause()
       card.timer:reset()
@@ -112,9 +114,9 @@ function class.create(_cardBack, _cardName, _x, _y)
 
   function card:draw()
     if (self.isUncovered) then
-      love.graphics.draw(card.sprite, card.x + card.width / 2, card.y, 0, card.scaleX, 1, card.width / 2)
+      DrawAPI.draw(Constants.priority.normal, Constants.color.white, card.sprite, card.x + card.width / 2, card.y, 0, card.scaleX, 1, card.width / 2, 0)
     else
-      love.graphics.draw(card.spriteBack, card.x + card.width / 2, card.y, 0, card.scaleX, 1, card.width / 2)
+      DrawAPI.draw(Constants.priority.normal, Constants.color.white, card.spriteBack, card.x + card.width / 2, card.y, 0, card.scaleX, 1, card.width / 2, 0)
     end
   end
 

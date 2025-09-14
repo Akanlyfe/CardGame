@@ -1,13 +1,15 @@
 local class = {}
 local timers = {}
 
-function class.create(_duration, _callback)
+function class.create(_name, _duration, _isRepeating, _callback)
   local timer = {
+    name = _name,
     time = 0,
     isPlaying = false,
-    isFinished = false,
     duration = _duration,
     callback = _callback,
+
+    isRepeating = _isRepeating,
 
     isRemoved = false
   }
@@ -24,6 +26,10 @@ function class.create(_duration, _callback)
     return self.duration / 2
   end
 
+  function timer:isStarted()
+    return self.isPlaying
+  end
+
   function timer:play()
     self.isPlaying = true
   end
@@ -36,22 +42,22 @@ function class.create(_duration, _callback)
     self.isRemoved = true
   end
 
-  function timer:isStarted()
-    return self.isPlaying
-  end
-
   function timer:reset()
     self.time = 0
-    self.isFinished = false
   end
 
   function timer:update(_dt)
     if (self.isPlaying) then
-      if (self.time < self.duration) then
-        self.time = self.time + _dt
-      else
-        if (self.callback and not self.isFinished) then
-          self.isFinished = true
+      self.time = self.time + _dt
+
+      if (self.time >= self.duration) then
+        if (not self.isRepeating) then
+          self.isPlaying = false
+        end
+
+        self.time = self.time - self.duration
+
+        if (self.callback) then
           self.callback()
         end
       end
