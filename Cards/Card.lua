@@ -15,7 +15,12 @@ function class.create(_cardBack, _cardName, _x, _y)
     spriteBack = love.graphics.newImage("Assets/Sprites/Cards/card" .. _cardBack .. ".png"),
     sprite = love.graphics.newImage("Assets/Sprites/Cards/card" .. _cardName .. ".png"),
 
+    isSelected = false,
+    dragOffsetX = 0,
+    dragOffsetY = 0,
+
     isUncovered = false,
+    canFlip = true,
     isFlipping = false,
     flipState = 0,
 
@@ -38,7 +43,7 @@ function class.create(_cardBack, _cardName, _x, _y)
   card.width = card.sprite:getWidth()
   card.height = card.sprite:getHeight()
 
-  card.timer = Timer.create("card" .. _cardName .. "Flip", 0.25, false,
+  card.timer = Timer.create("card" .. _cardName .. "Flip", 0.15, false,
     function()
       card.timer:pause()
       card.timer:reset()
@@ -52,18 +57,20 @@ function class.create(_cardBack, _cardName, _x, _y)
         card.flipState = 0
 
         card.isFlipping = false
+        card.canFlip = true
       end
     end
   )
 
   function card:flip()
+    if (not self.canFlip) then return end
+
+    self.canFlip = false
     self.isFlipping = true
     self.timer:play()
 
-    if (not self.flipSound:isPlaying()) then
-      self.flipSound = Sound.create("Cards/cardPlace" .. math.random(4), "ogg", "stream", 1, false)
-      self.flipSound:play()
-    end
+    self.flipSound = Sound.create("Cards/cardPlace" .. math.random(4), "ogg", "stream", 1, false)
+    self.flipSound:play()
   end
 
   function card:setPosition(_newX, _newY)

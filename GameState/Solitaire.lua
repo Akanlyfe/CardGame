@@ -12,10 +12,26 @@ local inGame = {}
 
 function class.load()
   Deck.init()
-  --TODO Deck.shuffle()
+  Deck.shuffle()
 
   inGame.deckPile = Card.create(Deck.getBack(), Deck.getBack(), 10, 10)
   inGame.drawnCards = {}
+
+  for i = 1, 7 do
+    for j = 1, i do
+      local cardName = Deck.drawCard()
+      local x = inGame.deckPile.x + inGame.deckPile.width / 2 + inGame.deckPile.width * 1.5 * i
+      local y = inGame.deckPile.y + inGame.deckPile.height + inGame.deckPile.height / 2 + j * inGame.deckPile.height / 5
+
+      local card = Card.create(Deck.getBack(), cardName, x, y)
+
+      if (j == i) then
+        card.isUncovered = true
+      end
+
+      table.insert(inGame.drawnCards, card)
+    end
+  end
 end
 
 function class.unload()
@@ -70,11 +86,6 @@ function class.mousepressed(_x, _y, _button)
 
         local card = Card.create(Deck.getBack(), cardName, x + spacing, y)
         table.insert(inGame.drawnCards, card)
-      else
-        Deck.init()
-        Deck.shuffle()
-
-        inGame.drawnCards = {}
       end
     end
 
@@ -82,7 +93,13 @@ function class.mousepressed(_x, _y, _button)
       for i = #inGame.drawnCards, 1, -1 do
         local card = inGame.drawnCards[i]
         if (Collision.isPointRectangleColliding(mousePosition, card:getBoundingBox())) then
-          card:moveTo(love.math.random(Constants.screen.width), love.math.random(Constants.screen.height))
+          local worldX, worldY = Constants.screenToWorld(_x, _y)
+
+          card.isSelected = true
+          card.dragOffsetX = worldX - card.x
+          card.dragOffsetY = worldY - card.y
+          
+          -- TODO Check for a card "pile" to move everything in once.
           break
         end
       end
@@ -93,6 +110,42 @@ function class.mousepressed(_x, _y, _button)
         local card = inGame.drawnCards[i]
         if (Collision.isPointRectangleColliding(mousePosition, card:getBoundingBox())) then
           card:flip()
+          break
+        end
+      end
+    end
+  end
+end
+
+function class.mousereleased(_x, _y, _button)
+  local mousePosition = {
+    x = _x,
+    y = _y
+  }
+
+  if (_button == 1) then
+    if (#inGame.drawnCards > 0) then
+      for i = #inGame.drawnCards, 1, -1 do
+        local card = inGame.drawnCards[i]
+        if (card.isSelected) then
+          card.isSelected = false
+          -- TODO Check if card can be placed "here".
+          -- TODO "Stack" cards together in those situations.
+          break
+        end
+      end
+    end
+  end
+end
+
+function class.mousemoved(_x, _y, _moveX, _moveY)
+  if (love.mouse.isDown(1)) then
+    if (#inGame.drawnCards > 0) then
+      for i = #inGame.drawnCards, 1, -1 do
+        local card = inGame.drawnCards[i]
+        if (card.isSelected) then
+          local worldX, worldY = Constants.screenToWorld(_x, _y)
+          card:setPosition(worldX - card.dragOffsetX, worldY - card.dragOffsetY)
           break
         end
       end

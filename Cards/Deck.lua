@@ -27,8 +27,6 @@ function class.count()
 end
 
 function class.shuffle()
-  math.randomseed(os.time())
-
   for i = #deck.cards, 2, -1 do
     local random = math.random(i)
 

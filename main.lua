@@ -8,6 +8,7 @@ local modules = {}
 local currentGameState = ""
 
 function love.load()
+  math.randomseed(os.time())
   love.graphics.setDefaultFilter('nearest', 'nearest', 0)
 
   modules.menu = require("GameState/Menu")

@@ -19,6 +19,13 @@ class.scale = math.min(scaleX, scaleY)
 class.screen.offset.x = (class.screen.width - class.game.width * class.scale) / 2
 class.screen.offset.y = (class.screen.height - class.game.height * class.scale) / 2
 
+function class.screenToWorld(_x, _y)
+  local worldX = (_x - class.screen.offset.x) / class.scale
+  local worldY = (_y - class.screen.offset.y) / class.scale
+
+  return worldX, worldY
+end
+
 -- PRIORITY RELATED CONSTANTS
 class.priority = {}
 class.priority.onTopOfAll = 10000
