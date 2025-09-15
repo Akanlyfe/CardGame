@@ -1,6 +1,7 @@
 local Constants = require("Util/Constants")
 local Timer = require("Util/Timer")
 local DrawAPI = require("Util/DrawAPI")
+local Sound = require("Util/Sound")
 
 local AkanMath = require("Util/Lib/AkanMath")
 local AkanEase = require("Util/Lib/AkanEase")
@@ -29,7 +30,9 @@ function class.create(_cardBack, _cardName, _x, _y)
     moveDuration = 0,
     isMoving = false,
 
-    scaleX = 1
+    scaleX = 1,
+
+    flipSound = Sound.create("Cards/cardPlace" .. math.random(4), "ogg", "stream", 1, false)
   }
 
   card.width = card.sprite:getWidth()
@@ -56,6 +59,11 @@ function class.create(_cardBack, _cardName, _x, _y)
   function card:flip()
     self.isFlipping = true
     self.timer:play()
+
+    if (not self.flipSound:isPlaying()) then
+      self.flipSound = Sound.create("Cards/cardPlace" .. math.random(4), "ogg", "stream", 1, false)
+      self.flipSound:play()
+    end
   end
 
   function card:setPosition(_newX, _newY)
@@ -103,7 +111,7 @@ function class.create(_cardBack, _cardName, _x, _y)
     if (self.isFlipping) then
       local t = self.timer:getTime() / self.timer:getDuration()
       local easedT = AkanEase.easeInOutCubic(t)
-      
+
       if (self.flipState == 0) then
         self.scaleX = AkanMath.lerp(1, 0, easedT)
       else
