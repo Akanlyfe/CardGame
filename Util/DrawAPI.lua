@@ -1,6 +1,6 @@
 local Animation = require("Util/Animation")
 
-local AkanMath = require("Util/Lib/AkanMath")
+local AkanAPI = require("Util/Lib/AkanAPI")
 
 local class = {}
 local objectList = {}
@@ -30,7 +30,7 @@ function class.color(_r, _g, _b, _a)
 end
 
 function class.drawObjects()
-  table.sort(objectList, AkanMath.prioritySorting)
+  table.sort(objectList, AkanAPI.prioritySorting)
 
   for objectID = 1, #objectList do
     local object = objectList[objectID]

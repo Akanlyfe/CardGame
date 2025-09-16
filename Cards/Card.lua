@@ -3,17 +3,41 @@ local Timer = require("Util/Timer")
 local DrawAPI = require("Util/DrawAPI")
 local Sound = require("Util/Sound")
 
-local AkanMath = require("Util/Lib/AkanMath")
-local AkanEase = require("Util/Lib/AkanEase")
+local AkanAPI = require("Util/Lib/AkanAPI")
+local AkanEase = AkanAPI.ease
+local AkanMath = AkanAPI.math
 
 local class = {}
+local cards = {}
 local speed = 100
 
-function class.create(_cardBack, _cardName, _x, _y)
+local function getCardName(_card)
+  local color = AkanAPI.switchString(_card.color, {
+      [1] = "Spades", [2] = "Hearts",
+      [3] = "Clubs",  [4] = "Diamonds",
+
+      default = "Spades"
+    })
+
+  local value = AkanAPI.switchString(_card.value, {
+      [1] = "A",    [2] = "2",    [3] = "3",
+      [4] = "4",    [5] = "5",    [6] = "6",
+      [7] = "7",    [8] = "8",    [9] = "9",
+      [10] = "10",  [11] = "J",
+      [12] = "Q",   [13] = "K",
+
+      default = "A"
+    })
+
+  return color .. value
+end
+
+function class.create(_color, _value, _cardBack, _x, _y)
   local card = {
-    name = _cardName,
+    color = _color,
+    value = _value,
+
     spriteBack = love.graphics.newImage("Assets/Sprites/Cards/card" .. _cardBack .. ".png"),
-    sprite = love.graphics.newImage("Assets/Sprites/Cards/card" .. _cardName .. ".png"),
 
     isSelected = false,
     dragOffsetX = 0,
@@ -40,10 +64,13 @@ function class.create(_cardBack, _cardName, _x, _y)
     flipSound = Sound.create("Cards/cardPlace" .. math.random(4), "ogg", "stream", 1, false)
   }
 
+  local cardName = getCardName(card)
+  card.sprite = love.graphics.newImage("Assets/Sprites/Cards/card" .. cardName .. ".png")
+
   card.width = card.sprite:getWidth()
   card.height = card.sprite:getHeight()
 
-  card.timer = Timer.create("card" .. _cardName .. "Flip", 0.15, false,
+  card.timer = Timer.create("card" .. cardName .. "Flip", 0.15, false,
     function()
       card.timer:pause()
       card.timer:reset()
@@ -135,7 +162,30 @@ function class.create(_cardBack, _cardName, _x, _y)
     end
   end
 
+  table.insert(cards, card)
+
   return card
+end
+
+function class.getCardCount()
+  return #cards
+end
+
+function class.getCard(_i)
+  return cards[_i] or nil
+end
+
+function class.update(_dt)
+  for _, card in pairs(cards) do
+    card:update(_dt)
+  end
+end
+
+function class.draw()
+  table.sort(cards, AkanAPI.prioritySorting)
+  for _, card in pairs(cards) do
+    card:draw()
+  end
 end
 
 return class
