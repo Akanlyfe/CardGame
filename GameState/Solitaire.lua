@@ -33,6 +33,7 @@ end
 
 function class.unload()
   inGame = {}
+  Card.clear()
   collectgarbage('collect')
 end
 
@@ -77,6 +78,9 @@ function class.mousepressed(_x, _y, _button)
           card.dragOffsetX = worldX - card.x
           card.dragOffsetY = worldY - card.y
 
+          card.startX = card.x
+          card.startY = card.y
+
           -- TODO Check for a card "pile" to move everything in once.
           break
         end
@@ -105,10 +109,28 @@ function class.mousereleased(_x, _y, _button)
     if (Card.getCardCount() > 0) then
       for i = Card.getCardCount(), 1, -1 do
         local card = Card.getCard(i)
+        local isStacked = false
+
         if (card.isSelected) then
           card.isSelected = false
+
           -- TODO Check if card can be placed "here".
           -- TODO "Stack" cards together in those situations.
+
+          for i = Card.getCardCount(), 1, -1 do
+            local cardClicked = Card.getCard(i)
+            if (card ~= cardClicked and Collision.isRectangleRectangleColliding(card:getBoundingBox(), cardClicked:getBoundingBox())) then
+              card:stackOn(cardClicked)
+              isStacked = true
+              break
+            end
+          end
+
+          if (not isStacked) then
+            card.x = card.startX
+            card.y = card.startY
+          end
+
           break
         end
       end

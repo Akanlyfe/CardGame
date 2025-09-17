@@ -89,6 +89,9 @@ function class.create(_color, _value, _cardBack, _x, _y)
     end
   )
 
+  card.previous = nil
+  card.next = nil
+
   function card:flip()
     if (not self.canFlip) then return end
 
@@ -127,6 +130,18 @@ function class.create(_color, _value, _cardBack, _x, _y)
     return boundingBox
   end
 
+  function card:stackOn(_card)
+    if (_card.next == nil) then
+      self.x = _card.x
+      self.y = _card.y + self.height / 5
+
+      self.previous = _card
+      _card.next = self
+    else
+      self:stackOn(_card.next)
+    end
+  end
+
   function card:update(_dt)
     if (self.isMoving) then
       self.moveTime = math.min(self.moveTime + _dt, self.moveDuration)
@@ -155,11 +170,10 @@ function class.create(_color, _value, _cardBack, _x, _y)
   end
 
   function card:draw()
-    if (self.isUncovered) then
-      DrawAPI.draw(Constants.priority.normal, Constants.color.white, card.sprite, card.x + card.width / 2, card.y, 0, card.scaleX, 1, card.width / 2, 0)
-    else
-      DrawAPI.draw(Constants.priority.normal, Constants.color.white, card.spriteBack, card.x + card.width / 2, card.y, 0, card.scaleX, 1, card.width / 2, 0)
-    end
+    local sprite = (self.isUncovered) and card.sprite or card.spriteBack
+    local priority = (self.isSelected) and Constants.priority.high or Constants.priority.normal
+
+    DrawAPI.draw(priority, Constants.color.white, sprite, card.x + card.width / 2, card.y, 0, card.scaleX, 1, card.width / 2, 0)
   end
 
   table.insert(cards, card)
@@ -173,6 +187,10 @@ end
 
 function class.getCard(_i)
   return cards[_i] or nil
+end
+
+function class.clear()
+  cards = {}
 end
 
 function class.update(_dt)
