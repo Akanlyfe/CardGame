@@ -57,29 +57,22 @@ function class.mousepressed(_x, _y, _button)
   }
 
   if (_button == 1) then
-    if (Collision.isPointRectangleColliding(mousePosition, inGame.deckPile:getBoundingBox())) then
-      if (Deck.count() > 0) then
-        local card = Deck.drawCard()
-        local x = inGame.deckPile.x + inGame.deckPile.width + 10
-        local y = inGame.deckPile.y
-        local spacing = inGame.deckPile.width / 4.5
+--    if (Collision.isPointRectangleColliding(mousePosition, inGame.deckPile:getBoundingBox())) then
+--      if (Deck.count() > 0) then
+--        local card = Deck.drawCard()
+--        local x = inGame.deckPile.x + inGame.deckPile.width + 10
+--        local y = inGame.deckPile.y
+--        local spacing = inGame.deckPile.width / 4.5
 
-        card:setPosition(x + spacing, y)
-      end
-    end
+--        card:setPosition(x + spacing, y)
+--      end
+--    end
 
     if (Card.getCardCount() > 0) then
       for i = Card.getCardCount(), 1, -1 do
         local card = Card.getCard(i)
         if (Collision.isPointRectangleColliding(mousePosition, card:getBoundingBox())) then
-          local worldX, worldY = Constants.screenToWorld(_x, _y)
-
-          card.isSelected = true
-          card.dragOffsetX = worldX - card.x
-          card.dragOffsetY = worldY - card.y
-
-          card.startX = card.x
-          card.startY = card.y
+          card:pickUp()
 
           -- TODO Check for a card "pile" to move everything in once.
           break
@@ -109,28 +102,12 @@ function class.mousereleased(_x, _y, _button)
     if (Card.getCardCount() > 0) then
       for i = Card.getCardCount(), 1, -1 do
         local card = Card.getCard(i)
-        local isStacked = false
 
         if (card.isSelected) then
-          card.isSelected = false
+          card:drop()
 
           -- TODO Check if card can be placed "here".
           -- TODO "Stack" cards together in those situations.
-
-          for i = Card.getCardCount(), 1, -1 do
-            local cardClicked = Card.getCard(i)
-            if (card ~= cardClicked and Collision.isRectangleRectangleColliding(card:getBoundingBox(), cardClicked:getBoundingBox())) then
-              card:stackOn(cardClicked)
-              isStacked = true
-              break
-            end
-          end
-
-          if (not isStacked) then
-            card.x = card.startX
-            card.y = card.startY
-          end
-
           break
         end
       end

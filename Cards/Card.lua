@@ -1,4 +1,5 @@
 local Constants = require("Util/Constants")
+local Collision = require("Util/Collision")
 local Timer = require("Util/Timer")
 local DrawAPI = require("Util/DrawAPI")
 local Sound = require("Util/Sound")
@@ -32,6 +33,13 @@ local function getCardName(_card)
   return color .. value
 end
 
+local function updateStack(_card, _update)
+  if (_card.next) then
+    _update(_card.next)
+    updateStack(_card.next, _update)
+  end
+end
+
 function class.create(_color, _value, _cardBack, _x, _y)
   local card = {
     color = _color,
@@ -60,6 +68,7 @@ function class.create(_color, _value, _cardBack, _x, _y)
     isMoving = false,
 
     scaleX = 1,
+    priority = Constants.priority.normal,
 
     flipSound = Sound.create("Cards/cardPlace" .. math.random(4), "ogg", "stream", 1, false)
   }
@@ -106,6 +115,10 @@ function class.create(_color, _value, _cardBack, _x, _y)
   function card:setPosition(_newX, _newY)
     self.x = _newX
     self.y = _newY
+
+    if (self.next) then
+      self.next:setPosition(_newX, _newY + self.height / 5)
+    end
   end
 
   function card:moveTo(_nextX, _nextY, _duration)
@@ -119,6 +132,94 @@ function class.create(_color, _value, _cardBack, _x, _y)
     self.isMoving = true
   end
 
+  function card:pickUp()
+    local x, y = love.mouse.getPosition()
+    local worldX, worldY = Constants.screenToWorld(x, y)
+
+    self.isSelected = true
+    self.dragOffsetX = worldX - self.x
+    self.dragOffsetY = worldY - self.y
+
+    self.startX = self.x
+    self.startY = self.y
+
+    self.priority = Constants.priority.high
+
+    if (self.previous) then
+      self.previous.next = nil
+      self.previous = nil
+    end
+
+    if (self.next) then
+      updateStack(self,
+        function(_card)
+          _card.priority = _card.previous.priority + 1
+        end
+      )
+    end
+  end
+
+  function card:drop()
+    local isStacked = false
+
+    self.isSelected = false
+    self.priority = Constants.priority.normal
+
+    updateStack(self,
+      function(_card)
+        _card.priority = Constants.priority.normal
+      end
+    )
+
+    for i = #cards, 1, -1 do
+      local cardClicked = cards[i] or nil
+
+      -- TODO Crash is from here!
+      -- drop line 185 calling stackOn
+      -- stackOn line 212 calling updateStack in an infinite loop.
+      -- card is checking not only with her next but also with
+      -- all next from the stack that it's colliding with
+      -- and is doing an infinite loop in updateStack() function.
+
+      if (self ~= cardClicked and cardClicked ~= self.next and Collision.isRectangleRectangleColliding(self:getBoundingBox(), cardClicked:getBoundingBox())) then
+        self:stackOn(cardClicked)
+        isStacked = true
+        break
+      end
+    end
+
+    if (not isStacked) then
+      self.x = self.startX
+      self.y = self.startY
+
+      updateStack(self,
+        function(_card)
+          _card.x = self.x
+          _card.y = self.y + self.height / 5
+        end
+      )
+    end
+  end
+
+  function card:stackOn(_card)
+    if (_card.next == nil) then
+      self.x = _card.x
+      self.y = _card.y + self.height / 5
+
+      self.previous = _card
+      _card.next = self
+
+      updateStack(self,
+        function(_card)
+          _card.x = self.x
+          _card.y = self.y + self.height / 5
+        end
+      )
+    else
+      self:stackOn(_card.next)
+    end
+  end
+
   function card:getBoundingBox()
     local boundingBox = {}
 
@@ -130,18 +231,6 @@ function class.create(_color, _value, _cardBack, _x, _y)
     return boundingBox
   end
 
-  function card:stackOn(_card)
-    if (_card.next == nil) then
-      self.x = _card.x
-      self.y = _card.y + self.height / 5
-
-      self.previous = _card
-      _card.next = self
-    else
-      self:stackOn(_card.next)
-    end
-  end
-
   function card:update(_dt)
     if (self.isMoving) then
       self.moveTime = math.min(self.moveTime + _dt, self.moveDuration)
@@ -151,6 +240,10 @@ function class.create(_color, _value, _cardBack, _x, _y)
 
       self.x = self.startX + (self.nextX - self.startX) * easedT
       self.y = self.startY + (self.nextY - self.startY) * easedT
+
+      if (self.next) then
+        self.next:setPosition(self.x, self.y + self.height / 5)
+      end
 
       if (self.moveTime >= self.moveDuration) then
         self.isMoving = false
@@ -171,9 +264,8 @@ function class.create(_color, _value, _cardBack, _x, _y)
 
   function card:draw()
     local sprite = (self.isUncovered) and card.sprite or card.spriteBack
-    local priority = (self.isSelected) and Constants.priority.high or Constants.priority.normal
 
-    DrawAPI.draw(priority, Constants.color.white, sprite, card.x + card.width / 2, card.y, 0, card.scaleX, 1, card.width / 2, 0)
+    DrawAPI.draw(self.priority, Constants.color.white, sprite, card.x + card.width / 2, card.y, 0, card.scaleX, 1, card.width / 2, 0)
   end
 
   table.insert(cards, card)
