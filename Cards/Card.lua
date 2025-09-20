@@ -40,6 +40,19 @@ local function updateStack(_card, _update)
   end
 end
 
+local function belongsToStack(_root, _target)
+  local current = _root
+  while current do
+    if current == _target then
+      return true 
+    end
+
+    current = current.next
+  end
+
+  return false
+end
+
 function class.create(_color, _value, _cardBack, _x, _y)
   local card = {
     color = _color,
@@ -74,6 +87,8 @@ function class.create(_color, _value, _cardBack, _x, _y)
   }
 
   local cardName = getCardName(card)
+  card.name = cardName
+
   card.sprite = love.graphics.newImage("Assets/Sprites/Cards/card" .. cardName .. ".png")
 
   card.width = card.sprite:getWidth()
@@ -116,9 +131,7 @@ function class.create(_color, _value, _cardBack, _x, _y)
     self.x = _newX
     self.y = _newY
 
-    if (self.next) then
-      self.next:setPosition(_newX, _newY + self.height / 5)
-    end
+    card:updateStackPositions()
   end
 
   function card:moveTo(_nextX, _nextY, _duration)
@@ -159,7 +172,7 @@ function class.create(_color, _value, _cardBack, _x, _y)
     end
   end
 
-  function card:drop()
+  function card:drop(_stackRule)
     local isStacked = false
 
     self.isSelected = false
@@ -174,16 +187,11 @@ function class.create(_color, _value, _cardBack, _x, _y)
     for i = #cards, 1, -1 do
       local cardClicked = cards[i] or nil
 
-      -- TODO Crash is from here!
-      -- drop line 185 calling stackOn
-      -- stackOn line 212 calling updateStack in an infinite loop.
-      -- card is checking not only with her next but also with
-      -- all next from the stack that it's colliding with
-      -- and is doing an infinite loop in updateStack() function.
-
-      if (self ~= cardClicked and cardClicked ~= self.next and Collision.isRectangleRectangleColliding(self:getBoundingBox(), cardClicked:getBoundingBox())) then
-        self:stackOn(cardClicked)
-        isStacked = true
+      if (self ~= cardClicked
+        and not belongsToStack(self, cardClicked)
+        and Collision.isRectangleRectangleColliding(self:getBoundingBox(), cardClicked:getBoundingBox())) then
+        self:stackOn(cardClicked, _stackRule or nil)
+        isStacked = _stackRule(self, cardClicked)
         break
       end
     end
@@ -191,32 +199,43 @@ function class.create(_color, _value, _cardBack, _x, _y)
     if (not isStacked) then
       self.x = self.startX
       self.y = self.startY
+    end
 
-      updateStack(self,
-        function(_card)
-          _card.x = self.x
-          _card.y = self.y + self.height / 5
-        end
-      )
+    self:updateStackPositions()
+  end
+
+  function card:stackOn(_card, _acceptFunction)
+    local canStack = true
+    if (_acceptFunction) then
+      canStack = _acceptFunction(self, _card)
+    end
+
+    if (not canStack) then
+      return
+    end
+
+    if (_card.next == nil) then
+      _card.next = self
+      self.previous = _card
+
+      self:setPosition(_card.x, _card.y + self.height / 5)
+    else
+      self:stackOn(_card.next)
     end
   end
 
-  function card:stackOn(_card)
-    if (_card.next == nil) then
-      self.x = _card.x
-      self.y = _card.y + self.height / 5
+  function card:updateStackPositions()
+    local current = self.next
+    local offset = self.height / 5
+    local y = self.y
 
-      self.previous = _card
-      _card.next = self
+    while current do
+      y = y + offset
 
-      updateStack(self,
-        function(_card)
-          _card.x = self.x
-          _card.y = self.y + self.height / 5
-        end
-      )
-    else
-      self:stackOn(_card.next)
+      current.x = self.x
+      current.y = y
+
+      current = current.next
     end
   end
 
@@ -241,9 +260,7 @@ function class.create(_color, _value, _cardBack, _x, _y)
       self.x = self.startX + (self.nextX - self.startX) * easedT
       self.y = self.startY + (self.nextY - self.startY) * easedT
 
-      if (self.next) then
-        self.next:setPosition(self.x, self.y + self.height / 5)
-      end
+      self:updateStackPositions()
 
       if (self.moveTime >= self.moveDuration) then
         self.isMoving = false
