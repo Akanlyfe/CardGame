@@ -7,14 +7,15 @@ class.ease = AkanEase
 class.math = AkanMath
 
 function class.prioritySorting(_a, _b)
-  if (_a.priority == _b.priority) then
-    if (_a.y == _b.y) then
-      return _a.x < _b.x
-    else
-      return _a.y < _b.y
-    end
-  else
+  if (_a.priority ~= _b.priority) then
     return _a.priority < _b.priority
+  elseif (_a.y ~= _b.y) then
+    return _a.y < _b.y
+  elseif (_a.x ~= _b.x) then
+    return _a.x < _b.x
+  else
+    -- TODO Find a way to do this case better.
+    return _a.UID < _b.UID
   end
 end
 

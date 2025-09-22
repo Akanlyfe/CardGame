@@ -8,7 +8,7 @@ local AkanAPI = require("Util/Lib/AkanAPI")
 local AkanEase = AkanAPI.ease
 local AkanMath = AkanAPI.math
 
-local class = {}
+local class = { UID = 0 }
 local cards = {}
 local speed = 100
 
@@ -53,8 +53,23 @@ local function belongsToStack(_root, _target)
   return false
 end
 
+local function isValidStack(_root, _stackRule)
+  local current = _root
+  while current.next do
+    if (not _stackRule(current, current.next)) then
+      return false
+    end
+
+    current = current.next
+  end
+
+  return true
+end
+
 function class.create(_color, _value, _cardBack, _x, _y)
+  class.UID = class.UID + 1
   local card = {
+    UID = class.UID,
     color = _color,
     value = _value,
 
@@ -64,7 +79,7 @@ function class.create(_color, _value, _cardBack, _x, _y)
     dragOffsetX = 0,
     dragOffsetY = 0,
 
-    isUncovered = false,
+    isUncovered = true,
     canFlip = true,
     isFlipping = false,
     flipState = 0,
@@ -145,7 +160,11 @@ function class.create(_color, _value, _cardBack, _x, _y)
     self.isMoving = true
   end
 
-  function card:pickUp()
+  function card:pickUp(_stackRule)
+    if (self.next and _stackRule and not isValidStack(self, _stackRule)) then
+      return false
+    end
+
     local x, y = love.mouse.getPosition()
     local worldX, worldY = Constants.screenToWorld(x, y)
 
@@ -170,6 +189,8 @@ function class.create(_color, _value, _cardBack, _x, _y)
         end
       )
     end
+
+    return true
   end
 
   function card:drop(_stackRule)
@@ -190,8 +211,7 @@ function class.create(_color, _value, _cardBack, _x, _y)
       if (self ~= cardClicked
         and not belongsToStack(self, cardClicked)
         and Collision.isRectangleRectangleColliding(self:getBoundingBox(), cardClicked:getBoundingBox())) then
-        self:stackOn(cardClicked, _stackRule or nil)
-        isStacked = _stackRule(self, cardClicked)
+        isStacked = self:stackOn(cardClicked, _stackRule or nil)
         break
       end
     end
@@ -211,7 +231,7 @@ function class.create(_color, _value, _cardBack, _x, _y)
     end
 
     if (not canStack) then
-      return
+      return false
     end
 
     if (_card.next == nil) then
@@ -219,8 +239,9 @@ function class.create(_color, _value, _cardBack, _x, _y)
       self.previous = _card
 
       self:setPosition(_card.x, _card.y + self.height / 5)
+      return true
     else
-      self:stackOn(_card.next)
+      return self:stackOn(_card.next)
     end
   end
 
@@ -303,13 +324,14 @@ function class.clear()
 end
 
 function class.update(_dt)
+  table.sort(cards, AkanAPI.prioritySorting)
+
   for _, card in pairs(cards) do
     card:update(_dt)
   end
 end
 
 function class.draw()
-  table.sort(cards, AkanAPI.prioritySorting)
   for _, card in pairs(cards) do
     card:draw()
   end

@@ -4,9 +4,11 @@ local AkanAPI = require("Util/Lib/AkanAPI")
 
 local class = {}
 local objectList = {}
+local UID = 0
 
 local function createNewObject(_priority, _color, _x, _y, _rotation, _scaleX, _scaleY, _offSetX, _offSetY)
   local object = {
+    UID = UID,
     priority = _priority,
     color = _color,
     x = _x,
@@ -17,6 +19,8 @@ local function createNewObject(_priority, _color, _x, _y, _rotation, _scaleX, _s
     offSetX = _offSetX,
     offSetY = _offSetY
   }
+
+  UID = UID + 1
 
   return object
 end

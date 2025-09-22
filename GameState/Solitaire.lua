@@ -10,7 +10,8 @@ local AkanMath = require("Util/Lib/AkanMath")
 local class = {}
 local solitaire = {}
 
-function solitaire.stackRule(_cardToPlace, _targetCard)
+function solitaire.dropRule(_cardToPlace, _targetCard)
+  -- TODO Check color like for real color, currently checking Spades is different from Clubs -> OK, but it is not OK!
   return (_cardToPlace.color ~= _targetCard.color) and (_cardToPlace.value == _targetCard.value - 1)
 end
 
@@ -18,14 +19,12 @@ function class.load()
   Deck.init()
   Deck.shuffle()
 
-  solitaire.deckPile = Card.create(1, 1, Deck.getBack(), 10, 10)
-
   local previousCard = nil
   for i = 1, 7 do
     for j = 1, i do
       local card = Deck.drawCard()
-      local x = solitaire.deckPile.x + solitaire.deckPile.width / 2 + solitaire.deckPile.width * 1.5 * i
-      local y = solitaire.deckPile.y + solitaire.deckPile.height + solitaire.deckPile.height / 2 + j * solitaire.deckPile.height / 5
+      local x = card.width / 2 + card.width * 1.5 * i
+      local y = card.height + card.height / 2 + j * card.height / 5
 
       card:setPosition(x, y)
 
@@ -68,22 +67,11 @@ function class.mousepressed(_x, _y, _button)
   }
 
   if (_button == 1) then
---    if (Collision.isPointRectangleColliding(mousePosition, solitaire.deckPile:getBoundingBox())) then
---      if (Deck.count() > 0) then
---        local card = Deck.drawCard()
---        local x = solitaire.deckPile.x + solitaire.deckPile.width + 10
---        local y = solitaire.deckPile.y
---        local spacing = solitaire.deckPile.width / 4.5
-
---        card:setPosition(x + spacing, y)
---      end
---    end
-
     if (Card.getCardCount() > 0) then
       for i = Card.getCardCount(), 1, -1 do
         local card = Card.getCard(i)
         if (Collision.isPointRectangleColliding(mousePosition, card:getBoundingBox())) then
-          card:pickUp()
+          card:pickUp(solitaire.stackRule)
           break
         end
       end
@@ -98,31 +86,10 @@ function class.mousepressed(_x, _y, _button)
         end
       end
     end
-    
-    -- TODO REMOVE THIS DEBUG
-  elseif (_button == 3) then
-    if (Card.getCardCount() > 0) then
-      for i = Card.getCardCount(), 1, -1 do
-        local card = Card.getCard(i)
-        if (Collision.isPointRectangleColliding(mousePosition, card:getBoundingBox())) then
-          local current = card
-          while current do
-            print(current.name)
-            current = current.next
-          end
-          break
-        end
-      end
-    end
   end
 end
 
 function class.mousereleased(_x, _y, _button)
-  local mousePosition = {
-    x = _x,
-    y = _y
-  }
-
   if (_button == 1) then
     if (Card.getCardCount() > 0) then
       for i = Card.getCardCount(), 1, -1 do
