@@ -98,7 +98,7 @@ function class.create(_color, _value, _cardBack, _x, _y)
     scaleX = 1,
     priority = Constants.priority.normal,
 
-    flipSound = Sound.create("Cards/cardPlace" .. math.random(4), "ogg", "stream", 1, false)
+    flipSoundList = {}
   }
 
   local cardName = getCardName(card)
@@ -128,6 +128,12 @@ function class.create(_color, _value, _cardBack, _x, _y)
     end
   )
 
+  for i = 1, 4 do
+    local sound = Sound.create("Cards/cardPlace" .. i, "ogg", "stream", 1, false)
+    table.insert(card.flipSoundList, sound)
+  end
+  card.flipSound = card.flipSoundList[math.random(#card.flipSoundList)]
+
   card.previous = nil
   card.next = nil
 
@@ -138,7 +144,8 @@ function class.create(_color, _value, _cardBack, _x, _y)
     self.isFlipping = true
     self.timer:play()
 
-    self.flipSound = Sound.create("Cards/cardPlace" .. math.random(4), "ogg", "stream", 1, false)
+    self.flipSound:stop()
+    self.flipSound = self.flipSoundList[math.random(#self.flipSoundList)]
     self.flipSound:play()
   end
 
@@ -146,7 +153,7 @@ function class.create(_color, _value, _cardBack, _x, _y)
     self.x = _newX
     self.y = _newY
 
-    card:updateStackPositions()
+    self:updateStackPositions()
   end
 
   function card:moveTo(_nextX, _nextY, _duration)
@@ -176,11 +183,6 @@ function class.create(_color, _value, _cardBack, _x, _y)
     self.startY = self.y
 
     self.priority = Constants.priority.high
-
-    if (self.previous) then
-      self.previous.next = nil
-      self.previous = nil
-    end
 
     if (self.next) then
       updateStack(self,
@@ -217,17 +219,14 @@ function class.create(_color, _value, _cardBack, _x, _y)
     end
 
     if (not isStacked) then
-      self.x = self.startX
-      self.y = self.startY
+      self:setPosition(self.startX, self.startY)
     end
-
-    self:updateStackPositions()
   end
 
   function card:stackOn(_card, _acceptFunction)
     local canStack = true
     if (_acceptFunction) then
-      canStack = _acceptFunction(self, _card)
+      canStack = _acceptFunction(_card, self)
     end
 
     if (not canStack) then
@@ -235,6 +234,10 @@ function class.create(_color, _value, _cardBack, _x, _y)
     end
 
     if (_card.next == nil) then
+      if (self.previous) then
+        self.previous.next = nil
+      end
+
       _card.next = self
       self.previous = _card
 

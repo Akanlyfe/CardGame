@@ -7,7 +7,6 @@ function class.load()
 end
 
 function class.unload()
-  gameOver = {}
   collectgarbage('collect')
 end
 

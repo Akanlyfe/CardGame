@@ -5,14 +5,14 @@ local GameState = require("GameState/GameState")
 local Deck = require("Cards/Deck")
 local Card = require("Cards/Card")
 
+local DrawAPI = require("Util/DrawAPI")
 local AkanMath = require("Util/Lib/AkanMath")
 
 local class = {}
 local solitaire = {}
 
-function solitaire.dropRule(_cardToPlace, _targetCard)
-  -- TODO Check color like for real color, currently checking Spades is different from Clubs -> OK, but it is not OK!
-  return (_cardToPlace.color ~= _targetCard.color) and (_cardToPlace.value == _targetCard.value - 1)
+function solitaire.stackRule(_card, _cardNext)
+  return (_card.color % 2 ~= _cardNext.color % 2) and (_card.value == _cardNext.value + 1)
 end
 
 function class.load()
@@ -42,7 +42,6 @@ function class.load()
 end
 
 function class.unload()
-  solitaire = {}
   Card.clear()
   collectgarbage('collect')
 end
@@ -52,6 +51,13 @@ end
 
 function class.draw()
   love.graphics.setBackgroundColor(0, .5, 0, 1)
+
+  local start = 3
+  for i = start, start + 3 do
+    DrawAPI.rectangle(Constants.priority.normal, Constants.color.red, 'line',
+      10 + i * (Card.getCard(1).width + Card.getCard(1).width / 5), 10,
+      Card.getCard(1).width, Card.getCard(1).height)
+  end
 end
 
 function class.keypressed(_key)

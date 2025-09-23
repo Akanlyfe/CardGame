@@ -10,7 +10,6 @@ function class.load()
 end
 
 function class.unload()
-  menu = {}
   collectgarbage('collect')
 end
 
