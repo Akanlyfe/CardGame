@@ -116,16 +116,15 @@ function class.create(_color, _value, _cardBack, _x, _y)
   card.width = card.sprite:getWidth()
   card.height = card.sprite:getHeight()
 
-  card.timer = Timer.create("card" .. cardName .. "Flip", 0.15, false,
+  card.flipTimer = Timer.create("card" .. cardName .. "Flip", 0.15, false,
     function()
-      card.timer:pause()
-      card.timer:reset()
-
       if (card.flipState == 0) then
         card.flipState = 1
 
         card.isUncovered = not card.isUncovered
-        card.timer:play()
+
+        card.flipTimer:reset()
+        card.flipTimer:play()
       elseif (card.flipState == 1) then
         card.flipState = 0
 
@@ -144,18 +143,6 @@ function class.create(_color, _value, _cardBack, _x, _y)
   card.previous = nil
   card.next = nil
 
-  function card:flip()
-    if (not self.canFlip) then return end
-
-    self.canFlip = false
-    self.isFlipping = true
-    self.timer:play()
-
-    self.flipSound:stop()
-    self.flipSound = self.flipSoundList[math.random(#self.flipSoundList)]
-    self.flipSound:play()
-  end
-
   function card:setPosition(_newX, _newY)
     self.x = _newX
     self.y = _newY
@@ -164,18 +151,33 @@ function class.create(_color, _value, _cardBack, _x, _y)
   end
 
   function card:moveTo(_nextX, _nextY, _duration)
+    self.previousPriority = self.priority
+
     self.startX = self.x
     self.startY = self.y
     self.nextX = _nextX
     self.nextY = _nextY
 
     self.moveTime = 0
-    self.moveDuration = _duration or 0.5
+    self.moveDuration = _duration or .5
     self.isMoving = true
   end
 
+  function card:flip()
+    if (not self.canFlip) then return end
+
+    self.canFlip = false
+    self.isFlipping = true
+
+    self.flipTimer:play()
+
+    self.flipSound:stop()
+    self.flipSound = self.flipSoundList[math.random(#self.flipSoundList)]
+    self.flipSound:play()
+  end
+
   function card:pickUp(_stackRule)
-    if (self.next and _stackRule and not isValidStack(self, _stackRule)) then
+    if ((not self.isUncovered) or (self.next and _stackRule and not isValidStack(self, _stackRule))) then
       return false
     end
 
@@ -220,6 +222,7 @@ function class.create(_color, _value, _cardBack, _x, _y)
 
       if (self ~= cardClicked
         and cardClicked.canStack
+        and cardClicked.next ~= self
         and not belongsToStack(self, cardClicked)
         and Collision.isRectangleRectangleColliding(self:getBoundingBox(), cardClicked:getBoundingBox())) then
         isStacked = self:stackOn(cardClicked, _stackRule or nil)
@@ -243,13 +246,16 @@ function class.create(_color, _value, _cardBack, _x, _y)
             table.insert(stack.cards, 1, self)
 
             self.canStack = false
-            return
+            isStacked = true
+            return isStacked
           end
         end
       end
 
       self:setPosition(self.startX, self.startY)
     end
+
+    return isStacked
   end
 
   function card:stackOn(_card, _acceptFunction)
@@ -323,7 +329,7 @@ function class.create(_color, _value, _cardBack, _x, _y)
     end
 
     if (self.isFlipping) then
-      local t = self.timer:getTime() / self.timer:getDuration()
+      local t = self.flipTimer:getTime() / self.flipTimer:getDuration()
       local easedT = AkanEase.easeInOutCubic(t)
 
       if (self.flipState == 0) then

@@ -1,10 +1,18 @@
 local Constants = require("Util/Constants")
+local Timer = require("Util/Timer")
 local Card = require("Cards/Card")
 
 local class = {}
 local deck = {}
 
 function class.init()
+  deck.canDraw = true
+  deck.drawTimer = Timer.create("deckDrawCard", .5, false,
+    function()
+      deck.canDraw = true
+    end
+  )
+
   deck.cards = {}
   deck.backs = {
     "Back_red1", "Back_red2", "Back_red3", "Back_red4", "Back_red5",
@@ -52,6 +60,13 @@ function class.getCount()
   return #deck.cards
 end
 
+function class.addCard(_card)
+  _card:setPosition(-5000, -5000)
+  _card.isUncovered = false
+
+  table.insert(deck.cards, _card)
+end
+
 function class.shuffle()
   for i = #deck.cards, 2, -1 do
     local random = math.random(i)
@@ -62,14 +77,19 @@ function class.shuffle()
   end
 end
 
-function class.drawCard()
-  if (#deck.cards > 0) then
-    local card = deck.cards[1]
-    card.isInDeck = false
+function class.drawCard(_isForced)
+  if (deck.canDraw or _isForced) then
+    if (#deck.cards > 0) then
+      local card = deck.cards[1]
+      card.isInDeck = false
 
-    table.remove(deck.cards, 1)
+      table.remove(deck.cards, 1)
 
-    return card
+      deck.canDraw = false
+      deck.drawTimer:play()
+
+      return card
+    end
   end
 
   return nil

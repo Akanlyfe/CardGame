@@ -17,13 +17,15 @@ function solitaire.stackRule(_card, _cardNext)
 end
 
 function class.load()
+  solitaire.drawnCards = {}
+
   Deck.init()
   Deck.shuffle()
 
   local previousCard = nil
   for i = 1, 7 do
     for j = 1, i do
-      local card = Deck.drawCard()
+      local card = Deck.drawCard(true)
       local x = 10 + i * card.width * 1.5
       local y = card.height * 1.5 + j * card.height / 5
 
@@ -75,21 +77,36 @@ function class.mousepressed(_x, _y, _button)
   }
 
   if (_button == 1) then
-    if (Deck.getCount() > 0) then
-      local deckPosition = Deck.getPosition()
-      local deckBB = Deck.getBoundingBox()
+    local deckPosition = Deck.getPosition()
+    local deckBB = Deck.getBoundingBox()
 
-      if (Collision.isPointRectangleColliding(mousePosition, deckBB)) then
+    if (Collision.isPointRectangleColliding(mousePosition, deckBB)) then
+      if (Deck.getCount() > 0) then
         local card = Deck.drawCard()
-        if (solitaire.previousPriority) then
+        if (card == nil) then return end
+
+        if (solitaire.previousPriority ~= nil) then
           card.priority = solitaire.previousPriority + 1
         end
 
         solitaire.previousPriority = card.priority
 
+        card.canStack = false
         card:setPosition(deckPosition.x, deckPosition.y)
         card:moveTo(deckPosition.x + deckBB.width * 3, deckPosition.y)
         card:flip()
+
+        table.insert(solitaire.drawnCards, card)
+      else
+        -- TODO
+        print("get cards and reform deck")
+
+        for _, card in pairs(solitaire.drawnCards) do
+          print(card.name)
+          Deck.addCard(card)
+        end
+
+        solitaire.drawnCards = {}
       end
     end
 
@@ -97,7 +114,11 @@ function class.mousepressed(_x, _y, _button)
       for i = Card.getCardCount(), 1, -1 do
         local card = Card.getCard(i)
         if (Collision.isPointRectangleColliding(mousePosition, card:getBoundingBox())) then
-          card:pickUp(solitaire.stackRule)
+          local isPickedUp = card:pickUp(solitaire.stackRule)
+          if (isPickedUp) then
+            solitaire.selectedCard = card
+          end
+
           break
         end
       end
@@ -112,20 +133,49 @@ function class.mousepressed(_x, _y, _button)
         end
       end
     end
+  elseif (_button == 3) then
+    -- TODO Remove this debug.
+    if (Card.getCardCount() > 0) then
+      for i = Card.getCardCount(), 1, -1 do
+        local card = Card.getCard(i)
+        if (Collision.isPointRectangleColliding(mousePosition, card:getBoundingBox())) then
+          print(card.name, card.priority)
+        end
+      end
+    end
   end
 end
 
 function class.mousereleased(_x, _y, _button)
   if (_button == 1) then
-    if (Card.getCardCount() > 0) then
-      for i = Card.getCardCount(), 1, -1 do
-        local card = Card.getCard(i)
+    if (solitaire.selectedCard) then
+      local isStacked = solitaire.selectedCard:drop(solitaire.stackRule)
+      if (isStacked) then
+        for i = Card.getCardCount(), 1, -1 do
+          local card = Card.getCard(i)
+          if (card == solitaire.selectedCard) then
+            print()
+            print(card.name)
+            print()
 
-        if (card.isSelected) then
-          card:drop(solitaire.stackRule)
-          break
+            for ID, card in pairs(solitaire.drawnCards) do
+              print(ID, card.name)
+            end
+            -- TODO Change the i to be the ID of the card we want to remove!
+            print("Removing: " .. i)
+            table.remove(solitaire.drawnCards, i)
+            for ID, card in pairs(solitaire.drawnCards) do
+              print(ID, card.name)
+            end
+
+            card.priority = Constants.priority.normal
+            card.canStack = true
+            break
+          end
         end
       end
+
+      solitaire.selectedCard = nil
     end
   end
 end

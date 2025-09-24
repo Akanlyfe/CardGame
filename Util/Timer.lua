@@ -53,9 +53,10 @@ function class.create(_name, _duration, _isRepeating, _callback)
       if (self.time >= self.duration) then
         if (not self.isRepeating) then
           self.isPlaying = false
+          self.time = 0
+        else
+          self.time = self.time - self.duration
         end
-
-        self.time = self.time - self.duration
 
         if (self.callback) then
           self.callback()
