@@ -1,3 +1,4 @@
+local Constants = require("Util/Constants")
 local Card = require("Cards/Card")
 
 local class = {}
@@ -12,20 +13,42 @@ function class.init()
   }
 
   deck.back = deck.backs[math.random(#deck.backs)]
+  deck.spriteBack = love.graphics.newImage("Assets/Sprites/Cards/card" .. deck.back .. ".png")
+
+  deck.x = 10
+  deck.y = 10
+  deck.width = deck.spriteBack:getWidth()
+  deck.height = deck.spriteBack:getHeight()
 
   for color = 1, 4 do
     for value = 1, 13 do
-      local card = Card.create(color, value, deck.back, 10, 10)
+      local card = Card.create(color, value, deck.back, -5000, -5000)
       table.insert(deck.cards, card)
     end
   end
 end
 
-function class.getBack()
-  return deck.back
+function class.getSpriteBack()
+  return deck.spriteBack
 end
 
-function class.count()
+function class.getPosition()
+  return {
+    x = deck.x,
+    y = deck.y
+  }
+end
+
+function class.getBoundingBox()
+  return {
+    x = deck.x * Constants.scale,
+    y = deck.y * Constants.scale,
+    width = deck.width * Constants.scale,
+    height = deck.height * Constants.scale
+  }
+end
+
+function class.getCount()
   return #deck.cards
 end
 
@@ -42,6 +65,8 @@ end
 function class.drawCard()
   if (#deck.cards > 0) then
     local card = deck.cards[1]
+    card.isInDeck = false
+
     table.remove(deck.cards, 1)
 
     return card

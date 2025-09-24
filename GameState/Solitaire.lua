@@ -4,6 +4,7 @@ local Collision = require("Util/Collision")
 local GameState = require("GameState/GameState")
 local Deck = require("Cards/Deck")
 local Card = require("Cards/Card")
+local FinalStack = require("Cards/FinalStack")
 
 local DrawAPI = require("Util/DrawAPI")
 local AkanMath = require("Util/Lib/AkanMath")
@@ -23,8 +24,8 @@ function class.load()
   for i = 1, 7 do
     for j = 1, i do
       local card = Deck.drawCard()
-      local x = card.width / 2 + card.width * 1.5 * i
-      local y = card.height + card.height / 2 + j * card.height / 5
+      local x = 10 + i * card.width * 1.5
+      local y = card.height * 1.5 + j * card.height / 5
 
       card:setPosition(x, y)
 
@@ -39,6 +40,8 @@ function class.load()
       previousCard = card
     end
   end
+
+  FinalStack.init(previousCard.width, previousCard.height)
 end
 
 function class.unload()
@@ -52,12 +55,11 @@ end
 function class.draw()
   love.graphics.setBackgroundColor(0, .5, 0, 1)
 
-  local start = 3
-  for i = start, start + 3 do
-    DrawAPI.rectangle(Constants.priority.normal, Constants.color.red, 'line',
-      10 + i * (Card.getCard(1).width + Card.getCard(1).width / 5), 10,
-      Card.getCard(1).width, Card.getCard(1).height)
+  if (Deck.getCount() > 0) then
+    DrawAPI.draw(Constants.priority.normal, Constants.color.white, Deck.getSpriteBack(), Deck.getPosition().x, Deck.getPosition().y)
   end
+
+  FinalStack.draw()
 end
 
 function class.keypressed(_key)
@@ -73,6 +75,24 @@ function class.mousepressed(_x, _y, _button)
   }
 
   if (_button == 1) then
+    if (Deck.getCount() > 0) then
+      local deckPosition = Deck.getPosition()
+      local deckBB = Deck.getBoundingBox()
+
+      if (Collision.isPointRectangleColliding(mousePosition, deckBB)) then
+        local card = Deck.drawCard()
+        if (solitaire.previousPriority) then
+          card.priority = solitaire.previousPriority + 1
+        end
+
+        solitaire.previousPriority = card.priority
+
+        card:setPosition(deckPosition.x, deckPosition.y)
+        card:moveTo(deckPosition.x + deckBB.width * 3, deckPosition.y)
+        card:flip()
+      end
+    end
+
     if (Card.getCardCount() > 0) then
       for i = Card.getCardCount(), 1, -1 do
         local card = Card.getCard(i)

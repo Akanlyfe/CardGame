@@ -4,6 +4,8 @@ local Timer = require("Util/Timer")
 local DrawAPI = require("Util/DrawAPI")
 local Sound = require("Util/Sound")
 
+local FinalStack = require("Cards/FinalStack")
+
 local AkanAPI = require("Util/Lib/AkanAPI")
 local AkanEase = AkanAPI.ease
 local AkanMath = AkanAPI.math
@@ -79,10 +81,14 @@ function class.create(_color, _value, _cardBack, _x, _y)
     dragOffsetX = 0,
     dragOffsetY = 0,
 
-    isUncovered = true,
+    isInDeck = true,
+
+    isUncovered = false,
     canFlip = true,
     isFlipping = false,
     flipState = 0,
+
+    canStack = true,
 
     x = _x,
     y = _y,
@@ -96,6 +102,7 @@ function class.create(_color, _value, _cardBack, _x, _y)
     isMoving = false,
 
     scaleX = 1,
+    previousPriority = Constants.priority.normal,
     priority = Constants.priority.normal,
 
     flipSoundList = {}
@@ -182,6 +189,7 @@ function class.create(_color, _value, _cardBack, _x, _y)
     self.startX = self.x
     self.startY = self.y
 
+    self.previousPriority = self.priority
     self.priority = Constants.priority.high
 
     if (self.next) then
@@ -199,7 +207,7 @@ function class.create(_color, _value, _cardBack, _x, _y)
     local isStacked = false
 
     self.isSelected = false
-    self.priority = Constants.priority.normal
+    self.priority = self.previousPriority
 
     updateStack(self,
       function(_card)
@@ -211,6 +219,7 @@ function class.create(_color, _value, _cardBack, _x, _y)
       local cardClicked = cards[i] or nil
 
       if (self ~= cardClicked
+        and cardClicked.canStack
         and not belongsToStack(self, cardClicked)
         and Collision.isRectangleRectangleColliding(self:getBoundingBox(), cardClicked:getBoundingBox())) then
         isStacked = self:stackOn(cardClicked, _stackRule or nil)
@@ -219,6 +228,26 @@ function class.create(_color, _value, _cardBack, _x, _y)
     end
 
     if (not isStacked) then
+      local finalStackList = FinalStack.getFinalStacks()
+      for _, stack in pairs(finalStackList) do
+        if (Collision.isRectangleRectangleColliding(self:getBoundingBox(), stack:getBoundingBox())) then
+          if ((#stack.cards == 0 and self.value == 1)
+            or (#stack.cards > 0 and self.color == stack.cards[1].color and self.value == stack.cards[1].value + 1)) then
+            if (self.previous) then
+              self.previous.next = nil
+            end
+
+            self.x = stack.x
+            self.y = stack.y
+
+            table.insert(stack.cards, 1, self)
+
+            self.canStack = false
+            return
+          end
+        end
+      end
+
       self:setPosition(self.startX, self.startY)
     end
   end
@@ -288,6 +317,8 @@ function class.create(_color, _value, _cardBack, _x, _y)
 
       if (self.moveTime >= self.moveDuration) then
         self.isMoving = false
+
+        self.priority = self.previousPriority
       end
     end
 

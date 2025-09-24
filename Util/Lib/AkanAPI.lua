@@ -14,7 +14,6 @@ function class.prioritySorting(_a, _b)
   elseif (_a.x ~= _b.x) then
     return _a.x < _b.x
   else
-    -- TODO Find a way to do this case better.
     return _a.UID < _b.UID
   end
 end
