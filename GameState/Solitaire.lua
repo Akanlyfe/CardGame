@@ -21,7 +21,7 @@ function class.load()
 
   Deck.init()
   Deck.shuffle()
-  
+
   Stack.init(Deck.getCardSize().width, Deck.getCardSize().height)
 
   local previousCard = nil
@@ -104,11 +104,7 @@ function class.mousepressed(_x, _y, _button)
 
         table.insert(solitaire.drawnCards, card)
       else
-        -- TODO
-        print("get cards and reform deck")
-
         for _, card in pairs(solitaire.drawnCards) do
-          print(card.name)
           Deck.addCard(card)
         end
 

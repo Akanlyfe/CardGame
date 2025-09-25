@@ -205,8 +205,11 @@ function class.create(_color, _value, _cardBack, _x, _y)
     return true
   end
 
+  -- TODO Review this, currently doing too much stuff for Solitaire, if I include more gamestyle in the future it'll be hard to do
   function card:drop(_stackRule)
     local isStacked = false
+    local stackList = Stack.getStacks()
+    local selectedStack = nil
 
     self.isSelected = false
     self.priority = self.previousPriority
@@ -231,10 +234,9 @@ function class.create(_color, _value, _cardBack, _x, _y)
     end
 
     if (not isStacked) then
-      local stackList = Stack.getStacks()
       for _, stack in pairs(stackList) do
         if (Collision.isRectangleRectangleColliding(self:getBoundingBox(), stack:getBoundingBox())) then
-          if (stack.isFinal) then
+          if (stack.isFinal and (not self.next)) then
             -- TODO Move this check in the stack itself?
             if (self.color == stack.color) then
               if ((#stack.cards == 0 and self.value == 1)
@@ -243,39 +245,50 @@ function class.create(_color, _value, _cardBack, _x, _y)
                   self.previous.next = nil
                 end
 
-                self.x = stack.x
-                self.y = stack.y
+                self:setPosition(stack.x, stack.y)
 
                 table.insert(stack.cards, 1, self)
 
                 self.canStack = false
                 isStacked = true
-                return isStacked
+                selectedStack = stack
+                break
               end
             end
           else
             -- TODO Move this check in the stack itself?
-            for _, cardInStack in pairs(stack.cards) do
-              print(cardInStack.name)
-            end
             if (#stack.cards == 0 and self.value == 13) then
-              self.x = stack.x
-              self.y = stack.y
+              if (self.previous) then
+                self.previous.next = nil
+              end
+
+              self:setPosition(stack.x, stack.y)
 
               table.insert(stack.cards, 1, self)
 
               isStacked = true
-              return isStacked
+              selectedStack = stack
+              break
             end
           end
         end
       end
+    end
 
+    if (isStacked) then
+      for _, stack in pairs(stackList) do
+        if (stack ~= selectedStack) then
+          for cardID, cardInStack in pairs(stack.cards) do
+            if (cardInStack == self) then
+              table.remove(stack.cards, cardID)
+            end
+          end
+        end
+      end
+    else
       self:setPosition(self.startX, self.startY)
     end
-    
-    -- TODO Remove card form stack it's not in.
-    
+
     return isStacked
   end
 
