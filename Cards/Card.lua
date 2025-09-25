@@ -4,7 +4,7 @@ local Timer = require("Util/Timer")
 local DrawAPI = require("Util/DrawAPI")
 local Sound = require("Util/Sound")
 
-local FinalStack = require("Cards/FinalStack")
+local Stack = require("Cards/Stack")
 
 local AkanAPI = require("Util/Lib/AkanAPI")
 local AkanEase = AkanAPI.ease
@@ -231,30 +231,51 @@ function class.create(_color, _value, _cardBack, _x, _y)
     end
 
     if (not isStacked) then
-      local finalStackList = FinalStack.getFinalStacks()
-      for _, stack in pairs(finalStackList) do
+      local stackList = Stack.getStacks()
+      for _, stack in pairs(stackList) do
         if (Collision.isRectangleRectangleColliding(self:getBoundingBox(), stack:getBoundingBox())) then
-          if ((#stack.cards == 0 and self.value == 1)
-            or (#stack.cards > 0 and self.color == stack.cards[1].color and self.value == stack.cards[1].value + 1)) then
-            if (self.previous) then
-              self.previous.next = nil
+          if (stack.isFinal) then
+            -- TODO Move this check in the stack itself?
+            if (self.color == stack.color) then
+              if ((#stack.cards == 0 and self.value == 1)
+                or (#stack.cards > 0 and self.value == stack.cards[1].value + 1)) then
+                if (self.previous) then
+                  self.previous.next = nil
+                end
+
+                self.x = stack.x
+                self.y = stack.y
+
+                table.insert(stack.cards, 1, self)
+
+                self.canStack = false
+                isStacked = true
+                return isStacked
+              end
             end
+          else
+            -- TODO Move this check in the stack itself?
+            for _, cardInStack in pairs(stack.cards) do
+              print(cardInStack.name)
+            end
+            if (#stack.cards == 0 and self.value == 13) then
+              self.x = stack.x
+              self.y = stack.y
 
-            self.x = stack.x
-            self.y = stack.y
+              table.insert(stack.cards, 1, self)
 
-            table.insert(stack.cards, 1, self)
-
-            self.canStack = false
-            isStacked = true
-            return isStacked
+              isStacked = true
+              return isStacked
+            end
           end
         end
       end
 
       self:setPosition(self.startX, self.startY)
     end
-
+    
+    -- TODO Remove card form stack it's not in.
+    
     return isStacked
   end
 

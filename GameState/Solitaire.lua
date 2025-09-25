@@ -4,7 +4,7 @@ local Collision = require("Util/Collision")
 local GameState = require("GameState/GameState")
 local Deck = require("Cards/Deck")
 local Card = require("Cards/Card")
-local FinalStack = require("Cards/FinalStack")
+local Stack = require("Cards/Stack")
 
 local DrawAPI = require("Util/DrawAPI")
 local AkanMath = require("Util/Lib/AkanMath")
@@ -21,11 +21,19 @@ function class.load()
 
   Deck.init()
   Deck.shuffle()
+  
+  Stack.init(Deck.getCardSize().width, Deck.getCardSize().height)
 
   local previousCard = nil
   for i = 1, 7 do
     for j = 1, i do
       local card = Deck.drawCard(true)
+
+      -- TODO if (j == 1) then stack on Stack.getStacks()[i] end
+      if (j == 1) then
+        table.insert(Stack.getStacks()[i].cards, card)
+      end
+
       local x = 10 + i * card.width * 1.5
       local y = card.height * 1.5 + j * card.height / 5
 
@@ -42,8 +50,6 @@ function class.load()
       previousCard = card
     end
   end
-
-  FinalStack.init(previousCard.width, previousCard.height)
 end
 
 function class.unload()
@@ -61,7 +67,7 @@ function class.draw()
     DrawAPI.draw(Constants.priority.normal, Constants.color.white, Deck.getSpriteBack(), Deck.getPosition().x, Deck.getPosition().y)
   end
 
-  FinalStack.draw()
+  Stack.draw()
 end
 
 function class.keypressed(_key)
@@ -151,22 +157,10 @@ function class.mousereleased(_x, _y, _button)
     if (solitaire.selectedCard) then
       local isStacked = solitaire.selectedCard:drop(solitaire.stackRule)
       if (isStacked) then
-        for i = Card.getCardCount(), 1, -1 do
-          local card = Card.getCard(i)
+        for i = #solitaire.drawnCards, 1, -1 do
+          local card = solitaire.drawnCards[i]
           if (card == solitaire.selectedCard) then
-            print()
-            print(card.name)
-            print()
-
-            for ID, card in pairs(solitaire.drawnCards) do
-              print(ID, card.name)
-            end
-            -- TODO Change the i to be the ID of the card we want to remove!
-            print("Removing: " .. i)
             table.remove(solitaire.drawnCards, i)
-            for ID, card in pairs(solitaire.drawnCards) do
-              print(ID, card.name)
-            end
 
             card.priority = Constants.priority.normal
             card.canStack = true

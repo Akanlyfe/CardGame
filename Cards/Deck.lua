@@ -47,6 +47,13 @@ function class.getPosition()
   }
 end
 
+function class.getCardSize()
+  return { 
+    width = deck.width,
+    height = deck.height
+  }
+end
+
 function class.getBoundingBox()
   return {
     x = deck.x * Constants.scale,
