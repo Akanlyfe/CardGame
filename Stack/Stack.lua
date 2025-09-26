@@ -1,21 +1,17 @@
 local Constants = require("Util/Constants")
 
-local StackManager = require("Stack/StackManager")
-
 local class = {}
 class.__index = class
 
-function class:new(_x, _y)
+function class:new(_x, _y, _width, _height)
   local stack = setmetatable({
       x = _x,
       y = _y,
-      width = StackManager.width,
-      height = StackManager.height,
+      width = _width,
+      height = _height,
 
       cards = {}
       }, self)
-
-  StackManager.register(stack)
 
   return stack
 end
@@ -25,6 +21,12 @@ function class:canAccept(_card)
 end
 
 function class:addCard(_card)
+  if (_card.previous) then
+    _card.previous.next = nil
+  end
+
+  _card:moveTo(self.x, self.y)
+
   table.insert(self.cards, 1, _card)
 end
 

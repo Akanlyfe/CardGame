@@ -4,7 +4,7 @@ local Timer = require("Util/Timer")
 local DrawAPI = require("Util/DrawAPI")
 local Sound = require("Util/Sound")
 
-local Stack = require("Stack/OldStack")
+local StackManager = require("Stack/StackManager")
 
 local AkanAPI = require("Util/Lib/AkanAPI")
 local AkanEase = AkanAPI.ease
@@ -36,8 +36,8 @@ local function getCardName(_card)
 end
 
 local function updateStack(_card, _update)
+  _update(_card)
   if (_card.next) then
-    _update(_card.next)
     updateStack(_card.next, _update)
   end
 end
@@ -197,7 +197,9 @@ function class.create(_color, _value, _cardBack, _x, _y)
     if (self.next) then
       updateStack(self,
         function(_card)
-          _card.priority = _card.previous.priority + 1
+          if (_card.previous) then
+            _card.priority = _card.previous.priority + 1
+          end
         end
       )
     end
@@ -205,14 +207,12 @@ function class.create(_color, _value, _cardBack, _x, _y)
     return true
   end
 
-  -- TODO Review this, currently doing too much stuff for Solitaire, if I include more gamestyle in the future it'll be hard to do
   function card:drop(_stackRule)
     local isStacked = false
-    local stackList = Stack.getStacks()
+    local stackList = StackManager.getStacks()
     local selectedStack = nil
 
     self.isSelected = false
-    self.priority = self.previousPriority
 
     updateStack(self,
       function(_card)
@@ -220,6 +220,7 @@ function class.create(_color, _value, _cardBack, _x, _y)
       end
     )
 
+    -- Try drop on other card
     for i = #cards, 1, -1 do
       local cardClicked = cards[i] or nil
 
@@ -233,60 +234,34 @@ function class.create(_color, _value, _cardBack, _x, _y)
       end
     end
 
+    -- Try drop on stack
     if (not isStacked) then
       for _, stack in pairs(stackList) do
         if (Collision.isRectangleRectangleColliding(self:getBoundingBox(), stack:getBoundingBox())) then
-          if (stack.isFinal and (not self.next)) then
-            -- TODO Move this check in the stack itself?
-            if (self.color == stack.color) then
-              if ((#stack.cards == 0 and self.value == 1)
-                or (#stack.cards > 0 and self.value == stack.cards[1].value + 1)) then
-                if (self.previous) then
-                  self.previous.next = nil
-                end
-
-                self:setPosition(stack.x, stack.y)
-
-                table.insert(stack.cards, 1, self)
-
-                self.canStack = false
-                isStacked = true
-                selectedStack = stack
-                break
-              end
-            end
-          else
-            -- TODO Move this check in the stack itself?
-            if (#stack.cards == 0 and self.value == 13) then
-              if (self.previous) then
-                self.previous.next = nil
-              end
-
-              self:setPosition(stack.x, stack.y)
-
-              table.insert(stack.cards, 1, self)
-
-              isStacked = true
-              selectedStack = stack
-              break
-            end
+          if (stack:canAccept(self)) then
+            stack:addCard(self)
+            isStacked = true
+            selectedStack = stack
           end
         end
       end
     end
 
+    -- Clean other stacks
     if (isStacked) then
       for _, stack in pairs(stackList) do
         if (stack ~= selectedStack) then
           for cardID, cardInStack in pairs(stack.cards) do
             if (cardInStack == self) then
+              cardInStack.canStack = true
               table.remove(stack.cards, cardID)
             end
           end
         end
       end
     else
-      self:setPosition(self.startX, self.startY)
+      self.priority = self.previousPriority
+      self:moveTo(self.startX, self.startY)
     end
 
     return isStacked
@@ -298,7 +273,7 @@ function class.create(_color, _value, _cardBack, _x, _y)
       canStack = _acceptFunction(_card, self)
     end
 
-    if (not canStack) then
+    if ((not canStack) or self.isMoving) then
       return false
     end
 
@@ -310,7 +285,7 @@ function class.create(_color, _value, _cardBack, _x, _y)
       _card.next = self
       self.previous = _card
 
-      self:setPosition(_card.x, _card.y + self.height / 5)
+      self:moveTo(_card.x, _card.y + self.height / 5)
       return true
     else
       return self:stackOn(_card.next)

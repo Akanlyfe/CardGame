@@ -4,7 +4,7 @@ local Collision = require("Util/Collision")
 local GameState = require("GameState/GameState")
 local Deck = require("Cards/Deck")
 local Card = require("Cards/Card")
-local Stack = require("Stack/OldStack")
+local StackManager = require("Stack/StackManager")
 
 local DrawAPI = require("Util/DrawAPI")
 local AkanMath = require("Util/Lib/AkanMath")
@@ -22,7 +22,7 @@ function class.load()
   Deck.init()
   Deck.shuffle()
 
-  Stack.init(Deck.getCardSize().width, Deck.getCardSize().height)
+  StackManager.init(Deck.getCardSize().width, Deck.getCardSize().height)
 
   local previousCard = nil
   for i = 1, 7 do
@@ -31,7 +31,7 @@ function class.load()
 
       -- TODO if (j == 1) then stack on Stack.getStacks()[i] end
       if (j == 1) then
-        table.insert(Stack.getStacks()[i].cards, card)
+        StackManager.getStacks()[i]:addCard(card)
       end
 
       local x = 10 + i * card.width * 1.5
@@ -67,7 +67,7 @@ function class.draw()
     DrawAPI.draw(Constants.priority.normal, Constants.color.white, Deck.getSpriteBack(), Deck.getPosition().x, Deck.getPosition().y)
   end
 
-  Stack.draw()
+  StackManager.draw()
 end
 
 function class.keypressed(_key)
@@ -126,6 +126,8 @@ function class.mousepressed(_x, _y, _button)
       end
     end
   elseif (_button == 2) then
+    -- TODO Add auto placement when right-click on card
+    -- TODO set the flip automatic
     if (Card.getCardCount() > 0) then
       for i = Card.getCardCount(), 1, -1 do
         local card = Card.getCard(i)
@@ -135,13 +137,22 @@ function class.mousepressed(_x, _y, _button)
         end
       end
     end
-  elseif (_button == 3) then
+
     -- TODO Remove this debug.
+  elseif (_button == 3) then
     if (Card.getCardCount() > 0) then
       for i = Card.getCardCount(), 1, -1 do
         local card = Card.getCard(i)
         if (Collision.isPointRectangleColliding(mousePosition, card:getBoundingBox())) then
           print(card.name, card.priority)
+        end
+      end
+    end
+
+    for _, stack in pairs(StackManager.getStacks()) do
+      if (Collision.isPointRectangleColliding(mousePosition, stack:getBoundingBox())) then
+        for _, card in pairs(stack.cards) do
+          print(card.name)
         end
       end
     end

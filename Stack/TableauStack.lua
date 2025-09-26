@@ -1,13 +1,12 @@
 local Constants = require("Util/Constants")
 
-local StackManager = require("Stack/StackManager")
 local Stack = require("Stack/Stack")
 
 local class = setmetatable({}, { __index = Stack })
 class.__index = class
 
-function class:new(_x, _y)
-  return Stack.new(self, _x, _y)
+function class:new(_x, _y, _width, _height)
+  return Stack.new(self, _x, _y, _width, _height)
 end
 
 function class:canAccept(_card)

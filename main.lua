@@ -9,6 +9,11 @@ local Card = require("Cards/Card")
 local modules = {}
 local currentGameState = ""
 
+-- TODO LIST
+-- * Some troubles with the replacment of setPosition by moveTo (cards not good priority, stacking when moving)
+-- * If card is moving, then pickUp previous (or root) card then priority isn't updated right.
+-- * Investigate drop crash (reproduce bug (not always): drop card stack on uncovered card that is it's previous)
+
 function love.load()
   math.randomseed(os.time())
   love.graphics.setDefaultFilter('nearest', 'nearest', 0)
