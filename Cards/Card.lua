@@ -4,7 +4,7 @@ local Timer = require("Util/Timer")
 local DrawAPI = require("Util/DrawAPI")
 local Sound = require("Util/Sound")
 
-local Stack = require("Cards/Stack")
+local Stack = require("Stack/OldStack")
 
 local AkanAPI = require("Util/Lib/AkanAPI")
 local AkanEase = AkanAPI.ease

@@ -4,7 +4,7 @@ local Collision = require("Util/Collision")
 local GameState = require("GameState/GameState")
 local Deck = require("Cards/Deck")
 local Card = require("Cards/Card")
-local Stack = require("Cards/Stack")
+local Stack = require("Stack/OldStack")
 
 local DrawAPI = require("Util/DrawAPI")
 local AkanMath = require("Util/Lib/AkanMath")
