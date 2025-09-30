@@ -29,6 +29,8 @@ function class:addCard(_card)
   Stack.addCard(self, _card)
 
   _card.canStack = false
+  
+  -- TODO Maybe return more information on the class:addCard to check if it's a king to say "WIN"
 end
 
 return class

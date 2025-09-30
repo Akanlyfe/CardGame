@@ -230,6 +230,8 @@ function class.create(_color, _value, _cardBack, _x, _y)
         and not belongsToStack(self, cardClicked)
         and Collision.isRectangleRectangleColliding(self:getBoundingBox(), cardClicked:getBoundingBox())) then
         isStacked = self:stackOn(cardClicked, _stackRule or nil)
+        -- TODO Instead of just breaking on the "first" card found
+        -- add colliding card to another list and then run thrue this list? (maybe check the "most collided" first?)
         break
       end
     end
