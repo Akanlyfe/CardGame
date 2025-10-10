@@ -257,6 +257,8 @@ function class.create(_color, _value, _cardBack, _x, _y)
             if (cardInStack == self) then
               cardInStack.canStack = true
               table.remove(stack.cards, cardID)
+              
+              -- TODO Flip previous card in stack.
             end
           end
         end
