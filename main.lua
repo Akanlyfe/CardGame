@@ -10,9 +10,10 @@ local modules = {}
 local currentGameState = ""
 
 -- TODO LIST
--- * Some troubles with the replacment of setPosition by moveTo (cards not good priority, stacking when moving)
+-- * Move out from Card the Manager part and create a CardManager.
+-- * Some troubles with the replacment of setPosition by moveTo (cards not good priority, stacking when moving).
 -- * If card is moving, then pickUp previous (or root) card then priority isn't updated right.
--- * Investigate drop crash (reproduce bug (not always): drop card stack on uncovered card that is it's previous)
+-- * Investigate drop crash (reproduce bug (not always): drop card stack on uncovered card that is it's previous).
 
 function love.load()
   math.randomseed(os.time())
